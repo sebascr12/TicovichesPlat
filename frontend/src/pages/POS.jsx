@@ -35,6 +35,7 @@ const POS = () => {
     const [customAmount, setCustomAmount] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('Efectivo');
     const [cashGiven, setCashGiven] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState(null);
 
     useEffect(() => {
         const loadProducts = async () => {
@@ -145,62 +146,127 @@ const POS = () => {
         }
     };
 
+    const renderProductCard = (product) => {
+        const qty = cart[product.id] || 0;
+        return (
+            <div
+                key={product.id}
+                onClick={() => updateQuantity(product.id, 1)}
+                className={cn(
+                    "relative group rounded-3xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all border-2",
+                    qty > 0 ? "border-orange-500" : "border-transparent dark:border-slate-800"
+                )}
+            >
+                <div className="aspect-[4/3] relative">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                    {product.popular && (
+                        <span className="absolute top-3 right-3 bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                            POPULAR
+                        </span>
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-3 text-white">
+                        <h3 className="font-extrabold text-base leading-tight drop-shadow-lg shadow-black mb-1.5">{product.name}</h3>
+                        <div className="bg-orange-600/90 backdrop-blur-md rounded-lg px-2 py-1 inline-table self-start">
+                            <span className="font-black text-white text-sm tracking-wide">{formatCurrency(product.price)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {qty > 0 && (
+                    <div className="absolute top-3 left-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-full px-2 py-1 flex items-center gap-3 shadow-lg" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => updateQuantity(product.id, -1)} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors">
+                            <Minus size={18} />
+                        </button>
+                        <span className="font-bold w-4 text-center text-gray-900 dark:text-white">{qty}</span>
+                        <button onClick={() => updateQuantity(product.id, 1)} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors">
+                            <Plus size={18} />
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="flex-1 flex flex-col h-full w-full animate-in fade-in duration-300">
             <main className="flex-1 flex flex-col lg:flex-row w-full mx-auto gap-6">
 
                 {/* Lado Izquierdo: Productos y Opciones */}
-                <div className="flex-1 space-y-8">
+                <div className="flex-1 space-y-6">
 
-                    {/* PRODUCTOS PRINCIPALES */}
+                    {/* PRODUCTOS PRINCIPALES / CATEGORÍAS */}
                     <section>
-                        <h2 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Productos Principales</h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                            {productsRaw.map(product => {
-                                const qty = cart[product.id] || 0;
-                                return (
-                                    <div
-                                        key={product.id}
-                                        onClick={() => updateQuantity(product.id, 1)}
-                                        className={cn(
-                                            "relative group rounded-3xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all border-2",
-                                            qty > 0 ? "border-orange-500" : "border-transparent dark:border-slate-800"
-                                        )}
-                                    >
-                                        <div className="aspect-[4/3] relative">
-                                            <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                                {selectedCategory ? `Viendo: ${selectedCategory}` : 'Categorías de Menú'}
+                            </h2>
+                            {selectedCategory && (
+                                <button
+                                    onClick={() => setSelectedCategory(null)}
+                                    className="text-orange-600 dark:text-orange-400 font-bold text-sm bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 rounded-xl transition-colors hover:bg-orange-100 dark:hover:bg-orange-500/20"
+                                >
+                                    ← Volver al inicio
+                                </button>
+                            )}
+                        </div>
 
-                                            {product.popular && (
-                                                <span className="absolute top-3 right-3 bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                                                    POPULAR
-                                                </span>
-                                            )}
+                        {/* RENDER LOGIC */}
+                        {!selectedCategory ? (
+                            // Vista Híbrida: Carpetas + Productos Sueltos
+                            <div className="space-y-8">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {['Pescado', 'Camarón', 'Mixto'].map(cat => {
+                                        let bgImage = '/images/pequeno.jpeg';
+                                        if (cat === 'Camarón') bgImage = '/images/mediano.jpeg';
+                                        if (cat === 'Mixto') bgImage = '/images/grande.jpeg';
 
-                                            <div className="absolute bottom-3 left-3 right-3 text-white">
-                                                <h3 className="font-bold text-sm leading-tight shadow-black/50 drop-shadow-md mb-1">{product.name}</h3>
-                                                <div className="bg-white/20 backdrop-blur-md rounded-full px-2 py-0.5 inline-block">
-                                                    <span className="font-bold text-white text-xs">{formatCurrency(product.price)}</span>
+                                        return (
+                                            <div
+                                                key={cat}
+                                                onClick={() => setSelectedCategory(cat)}
+                                                className="relative group rounded-3xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-all border-2 border-transparent hover:border-orange-500 min-h-[140px]"
+                                            >
+                                                <div className="absolute inset-0">
+                                                    <img src={bgImage} alt={cat} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                    <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-colors duration-300" />
+                                                </div>
+                                                <div className="relative h-full flex items-center justify-center p-4">
+                                                    <h3 className="font-black text-2xl text-white tracking-wide drop-shadow-lg text-center">{cat}</h3>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )
+                                    })}
+                                </div>
 
-                                        {/* Selector de cantidad superpuesto */}
-                                        {qty > 0 && (
-                                            <div className="absolute top-3 left-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-full px-2 py-1 flex items-center gap-3 shadow-lg" onClick={e => e.stopPropagation()}>
-                                                <button onClick={() => updateQuantity(product.id, -1)} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors">
-                                                    <Minus size={18} />
-                                                </button>
-                                                <span className="font-bold w-4 text-center text-gray-900 dark:text-white">{qty}</span>
-                                                <button onClick={() => updateQuantity(product.id, 1)} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors">
-                                                    <Plus size={18} />
-                                                </button>
-                                            </div>
-                                        )}
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Otros Platillos</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                                        {productsRaw.filter(p => {
+                                            const lowerName = p.name.toLowerCase();
+                                            return !lowerName.includes('camarón') &&
+                                                !lowerName.includes('camaron') &&
+                                                !lowerName.includes('mixto') &&
+                                                !lowerName.includes('ceviche');
+                                        }).map(renderProductCard)}
                                     </div>
-                                )
-                            })}
-                        </div>
+                                </div>
+                            </div>
+                        ) : (
+                            // Vista de Productos de la Categoría Seleccionada
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 animate-in fade-in zoom-in-95 duration-200">
+                                {productsRaw.filter(p => {
+                                    const lowerName = p.name.toLowerCase();
+                                    let cat = 'Otros';
+                                    if (lowerName.includes('camarón') || lowerName.includes('camaron')) cat = 'Camarón';
+                                    else if (lowerName.includes('mixto')) cat = 'Mixto';
+                                    else if (lowerName.includes('ceviche')) cat = 'Pescado';
+                                    return cat === selectedCategory;
+                                }).map(renderProductCard)}
+                            </div>
+                        )}
                     </section>
 
                     {/* EXTRAS Y PERSONALIZADOS */}
