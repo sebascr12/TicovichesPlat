@@ -45,10 +45,17 @@ const POS = () => {
 
                 const getImageForProduct = (name) => {
                     const lowerName = name.toLowerCase();
+
+                    // Tipos específicos
+                    if (lowerName.includes('mixto')) return '/images/mixto.jpeg';
+                    if (lowerName.includes('camarón') || lowerName.includes('camaron')) return '/images/camarones.jpeg';
                     if (lowerName.includes('caldosa') || lowerName.includes('picarita')) return '/images/caldosa.jpeg';
+
+                    // Tamaños base (usados como predeterminados para Pescado o Sopa)
                     if (lowerName.includes('pequeño')) return '/images/pequeno.jpeg';
                     if (lowerName.includes('mediano')) return '/images/mediano.jpeg';
                     if (lowerName.includes('grande')) return '/images/grande.jpeg';
+
                     return '/images/pequeno.jpeg'; // default fallback
                 };
 
