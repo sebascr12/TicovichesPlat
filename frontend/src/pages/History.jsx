@@ -9,7 +9,7 @@ const History = () => {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const response = await fetch('http://localhost:3000/api/reports/history');
+                const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/history`);
                 const data = await response.json();
                 setHistory(data);
             } catch (error) {

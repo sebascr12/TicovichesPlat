@@ -40,7 +40,7 @@ const POS = () => {
     useEffect(() => {
         const loadProducts = async () => {
             try {
-                const res = await fetch('http://localhost:3000/api/products');
+                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/products`);
                 const data = await res.json();
 
                 const getImageForProduct = (name) => {
@@ -133,7 +133,7 @@ const POS = () => {
         const toastId = toast.loading('Registrando venta...');
 
         try {
-            const response = await fetch('http://localhost:3000/api/sales', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

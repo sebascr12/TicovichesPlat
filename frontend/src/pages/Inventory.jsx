@@ -26,7 +26,7 @@ const Inventory = () => {
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/products');
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/products`);
             const data = await res.json();
             setProducts(data);
         } catch (error) {
@@ -37,7 +37,7 @@ const Inventory = () => {
 
     const fetchSalesHistory = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/inventory/sales', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/inventory/sales`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -56,7 +56,7 @@ const Inventory = () => {
     const handleSaveEdit = async (id) => {
         try {
             toast.loading("Guardando...", { id: 'save' });
-            const res = await fetch(`http://localhost:3000/api/inventory/products/${id}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/inventory/products/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ const Inventory = () => {
     const handleToggleActive = async (id, currentState) => {
         try {
             toast.loading("Actualizando estado...", { id: 'status' });
-            const res = await fetch(`http://localhost:3000/api/inventory/products/${id}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/inventory/products/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ const Inventory = () => {
         e.preventDefault();
         try {
             toast.loading("Agregando...", { id: 'add' });
-            const res = await fetch(`http://localhost:3000/api/inventory/products`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/inventory/products`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

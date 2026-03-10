@@ -25,8 +25,8 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             const [reportsRes, expensesRes] = await Promise.all([
-                fetch('http://localhost:3000/api/reports/daily'),
-                fetch('http://localhost:3000/api/expenses')
+                fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/daily`),
+                fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/expenses`)
             ]);
 
             const reportsResult = await reportsRes.json();
@@ -50,7 +50,7 @@ const Dashboard = () => {
 
         const toastId = toast.loading('Registrando gasto...');
         try {
-            const res = await fetch('http://localhost:3000/api/expenses', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/expenses`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount, description: newExpense.description })
@@ -68,7 +68,7 @@ const Dashboard = () => {
     };
 
     const handleExportExcel = () => {
-        window.location.href = `http://localhost:3000/api/reports/excel?t=${Date.now()}`;
+        window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/excel?t=${Date.now()}`;
     };
 
     const handleCierreCaja = async () => {
@@ -82,12 +82,12 @@ const Dashboard = () => {
 
         try {
             // 1. Forzar descarga del Excel de respaldo de forma programática y forzando a evadir Cache.
-            window.location.href = `http://localhost:3000/api/reports/excel?t=${Date.now()}`;
+            window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/excel?t=${Date.now()}`;
 
             // Damos de 1.5s para asegurar que el navegador registre que bajamos el archivo.
             setTimeout(async () => {
                 // 2. Hacer el Reset
-                const resetRes = await fetch('http://localhost:3000/api/reports/reset', { method: 'POST' });
+                const resetRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/reset`, { method: 'POST' });
 
                 if (!resetRes.ok) throw new Error("Error borrando datos");
 

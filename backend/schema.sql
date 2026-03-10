@@ -53,9 +53,15 @@ CREATE TABLE IF NOT EXISTS expenses (
 -- Insertar productos iniciales según indicaciones
 INSERT INTO products (name, price) VALUES
 ('Caldosa', 1500.00),
-('Ceviche Pequeño', 2500.00),
-('Ceviche Mediano', 4000.00),
-('Ceviche Grande', 7000.00);
+('Ceviche de Pescado Pequeño', 2500.00),
+('Ceviche de Pescado Mediano', 4000.00),
+('Ceviche de Pescado Grande', 7000.00),
+('Ceviche de Camarón Pequeño', 2500.00),
+('Ceviche de Camarón Mediano', 4000.00),
+('Ceviche de Camarón Grande', 7000.00),
+('Ceviche Mixto Pequeño', 2500.00),
+('Ceviche Mixto Mediano', 4000.00),
+('Ceviche Mixto Grande', 7000.00);
 
 -- Insertar un registro Dummy para representar el "Monto Custom / Extras"
 INSERT INTO products (name, price, type) VALUES
