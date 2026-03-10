@@ -155,7 +155,7 @@ const POS = () => {
                     {/* PRODUCTOS PRINCIPALES */}
                     <section>
                         <h2 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Productos Principales</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                             {productsRaw.map(product => {
                                 const qty = cart[product.id] || 0;
                                 return (
@@ -177,10 +177,10 @@ const POS = () => {
                                                 </span>
                                             )}
 
-                                            <div className="absolute bottom-4 left-4 right-4 text-white">
-                                                <h3 className="font-bold text-xl mb-1">{product.name}</h3>
-                                                <div className="bg-white/20 backdrop-blur-md rounded-full px-3 py-1 inline-block">
-                                                    <span className="font-bold text-white text-sm">{formatCurrency(product.price)}</span>
+                                            <div className="absolute bottom-3 left-3 right-3 text-white">
+                                                <h3 className="font-bold text-sm leading-tight shadow-black/50 drop-shadow-md mb-1">{product.name}</h3>
+                                                <div className="bg-white/20 backdrop-blur-md rounded-full px-2 py-0.5 inline-block">
+                                                    <span className="font-bold text-white text-xs">{formatCurrency(product.price)}</span>
                                                 </div>
                                             </div>
                                         </div>
