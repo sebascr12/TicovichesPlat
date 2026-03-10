@@ -36,6 +36,7 @@ const POS = () => {
     const [paymentMethod, setPaymentMethod] = useState('Efectivo');
     const [cashGiven, setCashGiven] = useState('');
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
     useEffect(() => {
         const loadProducts = async () => {
@@ -101,6 +102,7 @@ const POS = () => {
         setCart({});
         setCustomAmount('');
         setCashGiven('');
+        setIsCartOpen(false);
     };
 
     const handleConfirm = async () => {
@@ -147,6 +149,7 @@ const POS = () => {
 
             toast.success(`Venta de ${formatCurrency(grandTotal)} registrada con éxito!`, { id: toastId });
             clearCart();
+            setIsCartOpen(false);
         } catch (error) {
             console.error(error);
             toast.error('Hubo un error registrando la venta.', { id: toastId });
@@ -184,11 +187,11 @@ const POS = () => {
 
                 {qty > 0 && (
                     <div className="absolute top-3 left-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-full px-2 py-1 flex items-center gap-3 shadow-lg" onClick={e => e.stopPropagation()}>
-                        <button onClick={() => updateQuantity(product.id, -1)} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors">
+                        <button onClick={() => updateQuantity(product.id, -1)} className="w-10 h-10 lg:w-8 lg:h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors active:scale-95">
                             <Minus size={18} />
                         </button>
                         <span className="font-bold w-4 text-center text-gray-900 dark:text-white">{qty}</span>
-                        <button onClick={() => updateQuantity(product.id, 1)} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors">
+                        <button onClick={() => updateQuantity(product.id, 1)} className="w-10 h-10 lg:w-8 lg:h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors active:scale-95">
                             <Plus size={18} />
                         </button>
                     </div>
@@ -198,8 +201,8 @@ const POS = () => {
     };
 
     return (
-        <div className="flex-1 flex flex-col h-full w-full animate-in fade-in duration-300">
-            <main className="flex-1 flex flex-col lg:flex-row w-full mx-auto gap-6">
+        <div className="flex-1 flex flex-col h-full w-full animate-in fade-in duration-300 pb-24 md:pb-0">
+            <main className="flex-1 flex flex-col lg:flex-row w-full mx-auto gap-6 relative">
 
                 {/* Lado Izquierdo: Productos y Opciones */}
                 <div className="flex-1 space-y-6">
@@ -350,8 +353,24 @@ const POS = () => {
                 </div>
 
                 {/* Lado Derecho: Resumen y Cobro (Ticket / Receipt Area) */}
-                <div className="w-full lg:w-96">
-                    <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-slate-700 sticky top-24 transition-colors duration-300">
+                {/* En escritorio está fijo a la derecha. En móvil es un Bottom Sheet modal */}
+                <div className={cn(
+                    "w-full lg:w-96 flex-shrink-0 z-50 transition-transform duration-300",
+                    isCartOpen ? "fixed inset-0 bg-black/50 lg:relative lg:inset-auto lg:bg-transparent flex items-end lg:block overflow-hidden" : "hidden lg:block"
+                )}>
+                    {/* Overlay onClick to close mobile modal */}
+                    {isCartOpen && <div className="absolute inset-0 lg:hidden" onClick={() => setIsCartOpen(false)} />}
+
+                    <div className={cn(
+                        "bg-white dark:bg-slate-800 lg:rounded-[2rem] p-6 lg:shadow-[0_8px_30px_rgb(0,0,0,0.06)] lg:border border-gray-100 dark:border-slate-700 lg:sticky top-24 transition-colors duration-300 relative w-full lg:w-auto",
+                        isCartOpen ? "rounded-t-[2rem] max-h-[85vh] overflow-y-auto pb-safe" : ""
+                    )}>
+                        {/* Mobile handle & close */}
+                        {isCartOpen && (
+                            <div className="flex justify-center mb-4 lg:hidden">
+                                <div className="w-12 h-1.5 bg-gray-300 dark:bg-slate-600 rounded-full" />
+                            </div>
+                        )}
                         {/* Digital Ticket */}
                         <div className="border border-dashed border-gray-200 dark:border-slate-600 rounded-2xl p-4 mb-6 bg-gray-50/50 dark:bg-slate-900/50 min-h-[200px] flex flex-col">
                             <div className="flex justify-between items-center mb-4">
@@ -424,6 +443,25 @@ const POS = () => {
                     </div>
                 </div>
 
+                {/* Floating Bottom Bar para Móviles */}
+                {!isCartOpen && (
+                    <div className="lg:hidden fixed bottom-[72px] left-0 right-0 p-4 bg-transparent z-40 pointer-events-none pb-safe">
+                        <div className="max-w-md mx-auto pointer-events-auto">
+                            <button
+                                onClick={() => setIsCartOpen(true)}
+                                className="w-full bg-gray-900 dark:bg-black text-white px-6 py-4 rounded-full shadow-2xl flex items-center justify-between transition-transform transform active:scale-95 border border-gray-800"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-gray-800 dark:bg-gray-900 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                                        {totalItems}
+                                    </div>
+                                    <span className="font-bold">Ver Tiquete</span>
+                                </div>
+                                <span className="font-black text-lg">{formatCurrency(grandTotal)}</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );

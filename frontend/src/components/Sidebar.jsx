@@ -7,7 +7,7 @@ const Sidebar = () => {
     const { isAdmin, user, logout } = useAuth();
 
     return (
-        <aside className="w-64 bg-white dark:bg-slate-800 border-r border-gray-100 dark:border-slate-700 flex flex-col h-screen fixed left-0 top-0 transition-colors duration-300 z-50">
+        <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-slate-800 border-r border-gray-100 dark:border-slate-700 h-screen fixed left-0 top-0 transition-colors duration-300 z-50">
             <div className="p-6 flex items-center gap-3 border-b border-gray-50 dark:border-slate-700/50">
                 <div className="bg-orange-600 text-white p-2 rounded-xl">
                     <UtensilsCrossed size={24} />
