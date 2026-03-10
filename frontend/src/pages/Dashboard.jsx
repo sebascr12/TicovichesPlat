@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { formatCurrency } from '../lib/utils';
 import { TrendingUp, Download, Lock, ChevronRight } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const Dashboard = () => {
     const { isAdmin } = useAuth();
@@ -29,7 +30,44 @@ const Dashboard = () => {
     };
 
     const handleExportExcel = () => {
-        window.location.href = 'http://localhost:3000/api/reports/excel';
+        window.location.href = `http://localhost:3000/api/reports/excel?t=${Date.now()}`;
+    };
+
+    const handleCierreCaja = async () => {
+        const confirmar = window.confirm(
+            "⚠️ ATENCIÓN: Esta acción exportará las ventas a Excel y REINICIARÁ TODAS LAS VENTAS DE HOY a cero.\n\n¿Estás completamente seguro de realizar el Cierre de Caja?"
+        );
+
+        if (!confirmar) return;
+
+        const toastId = toast.loading('Realizando Cierre de Caja...');
+
+        try {
+            // 1. Forzar descarga del Excel de respaldo de forma programática y forzando a evadir Cache.
+            window.location.href = `http://localhost:3000/api/reports/excel?t=${Date.now()}`;
+
+            // Damos de 1.5s para asegurar que el navegador registre que bajamos el archivo.
+            setTimeout(async () => {
+                // 2. Hacer el Reset
+                const resetRes = await fetch('http://localhost:3000/api/reports/reset', { method: 'POST' });
+
+                if (!resetRes.ok) throw new Error("Error borrando datos");
+
+                toast.success('¡Cierre Exitoso! Las ventas de hoy se han borrado del sistema.', { id: toastId });
+
+                // 3. Volver a recargar la UI a 0.
+                setData({
+                    summary: { total_amount: 0, transactions: 0 },
+                    by_payment_method: [],
+                    top_products: []
+                });
+                fetchDashboardData();
+            }, 1500);
+
+        } catch (error) {
+            console.error(error);
+            toast.error('Hubo un error en el Cierre.', { id: toastId });
+        }
     };
 
     if (loading) return <div className="p-8"><p className="dark:text-white">Cargando datos...</p></div>;
@@ -153,7 +191,10 @@ const Dashboard = () => {
                         Exportar a Excel
                     </button>
                 )}
-                <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold py-4 px-6 rounded-2xl hover:shadow-[0_8px_20px_rgba(234,88,12,0.3)] transition-all hover:-translate-y-0.5 transform">
+                <button
+                    onClick={handleCierreCaja}
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold py-4 px-6 rounded-2xl hover:shadow-[0_8px_20px_rgba(234,88,12,0.3)] transition-all hover:-translate-y-0.5 transform"
+                >
                     <Lock size={20} />
                     Cierre de Caja
                 </button>

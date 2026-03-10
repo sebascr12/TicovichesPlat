@@ -41,12 +41,22 @@ const POS = () => {
             try {
                 const res = await fetch('http://localhost:3000/api/products');
                 const data = await res.json();
+
+                const getImageForProduct = (name) => {
+                    const lowerName = name.toLowerCase();
+                    if (lowerName.includes('caldosa') || lowerName.includes('picarita')) return '/images/caldosa.jpeg';
+                    if (lowerName.includes('pequeño')) return '/images/pequeno.jpeg';
+                    if (lowerName.includes('mediano')) return '/images/mediano.jpeg';
+                    if (lowerName.includes('grande')) return '/images/grande.jpeg';
+                    return '/images/pequeno.jpeg'; // default fallback
+                };
+
                 // Mapeamos temporalmente con la info requerida, e ignoramos los NO activos
                 const mapP = data.filter(p => p.is_active && p.type !== 'custom').map(p => ({
                     id: p.id,
                     name: p.name,
                     price: parseFloat(p.price),
-                    image: p.name.includes('Caldosa') ? 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop' : 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=400&h=400&fit=crop'
+                    image: getImageForProduct(p.name)
                 }));
                 setProductsRaw(mapP);
             } catch (err) {
