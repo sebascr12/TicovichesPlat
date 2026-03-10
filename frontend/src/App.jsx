@@ -9,6 +9,7 @@ import POS from './pages/POS';
 import Login from './pages/Login';
 import Inventory from './pages/Inventory';
 import Settings from './pages/Settings';
+import History from './pages/History';
 
 // Componente para proteger todas las rutas que requieren Authentication
 const ProtectedRoute = ({ children }) => {
@@ -53,6 +54,12 @@ function App() {
               <Route path="/settings" element={
                 <AdminRoute>
                   <Settings />
+                </AdminRoute>
+              } />
+
+              <Route path="/history" element={
+                <AdminRoute>
+                  <History />
                 </AdminRoute>
               } />
             </Route>

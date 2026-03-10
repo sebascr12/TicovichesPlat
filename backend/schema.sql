@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS sales (
     id SERIAL PRIMARY KEY,
     total_amount DECIMAL(10, 2) NOT NULL,
     payment_method VARCHAR(50) NOT NULL, -- 'Efectivo', 'Tarjeta', 'SINPE'
+    status VARCHAR(20) DEFAULT 'active', -- 'active' o 'closed'
     sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -38,6 +39,15 @@ CREATE TABLE IF NOT EXISTS sale_items (
     quantity INTEGER NOT NULL DEFAULT 1,
     unit_price DECIMAL(10, 2) NOT NULL,
     subtotal DECIMAL(10, 2) NOT NULL
+);
+
+-- Tabla de Gastos (Caja Chica)
+CREATE TABLE IF NOT EXISTS expenses (
+    id SERIAL PRIMARY KEY,
+    amount DECIMAL(10, 2) NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    status VARCHAR(20) DEFAULT 'active', -- 'active' (hoy) o 'closed' (histórico)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insertar productos iniciales según indicaciones

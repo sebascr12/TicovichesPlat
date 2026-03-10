@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Package, Settings, UtensilsCrossed, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, Settings, UtensilsCrossed, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 
 const Sidebar = () => {
@@ -27,6 +27,7 @@ const Sidebar = () => {
                 {isAdmin && (
                     <>
                         <NavItem to="/inventory" icon={<Package size={20} />} label="Inventario" />
+                        <NavItem to="/history" icon={<Clock size={20} />} label="Historial" />
                         <NavItem to="/settings" icon={<Settings size={20} />} label="Ajustes" />
                     </>
                 )}
@@ -48,7 +49,7 @@ const Sidebar = () => {
                     </button>
                 </div>
             </div>
-        </aside>
+        </aside >
     );
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatCurrency } from '../lib/utils';
-import { TrendingUp, Download, Lock, ChevronRight } from 'lucide-react';
+import { TrendingUp, Download, Lock, ChevronRight, Plus, X, ArrowDownRight } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -11,7 +11,12 @@ const Dashboard = () => {
         by_payment_method: [],
         top_products: []
     });
+    const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Modal State
+    const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+    const [newExpense, setNewExpense] = useState({ amount: '', description: '' });
 
     useEffect(() => {
         fetchDashboardData();
@@ -19,13 +24,46 @@ const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/reports/daily');
-            const result = await response.json();
-            setData(result);
+            const [reportsRes, expensesRes] = await Promise.all([
+                fetch('http://localhost:3000/api/reports/daily'),
+                fetch('http://localhost:3000/api/expenses')
+            ]);
+
+            const reportsResult = await reportsRes.json();
+            const expensesResult = await expensesRes.json();
+
+            setData(reportsResult);
+            setExpenses(expensesResult);
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleAddExpense = async (e) => {
+        e.preventDefault();
+        const amount = parseFloat(newExpense.amount);
+        if (isNaN(amount) || amount <= 0 || !newExpense.description.trim()) {
+            return toast.error("El monto y descripción son inválidos.");
+        }
+
+        const toastId = toast.loading('Registrando gasto...');
+        try {
+            const res = await fetch('http://localhost:3000/api/expenses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount, description: newExpense.description })
+            });
+            if (!res.ok) throw new Error("Error guardando el gasto");
+
+            toast.success("Gasto registrado", { id: toastId });
+            setNewExpense({ amount: '', description: '' });
+            setIsExpenseModalOpen(false);
+            fetchDashboardData(); // Refrescar info
+        } catch (error) {
+            console.error(error);
+            toast.error("Hubo un error registrando el gasto.", { id: toastId });
         }
     };
 
@@ -55,12 +93,15 @@ const Dashboard = () => {
 
                 toast.success('¡Cierre Exitoso! Las ventas de hoy se han borrado del sistema.', { id: toastId });
 
+                toast.success('¡Cierre Exitoso! Las ventas de hoy se han borrado del sistema.', { id: toastId });
+
                 // 3. Volver a recargar la UI a 0.
                 setData({
                     summary: { total_amount: 0, transactions: 0 },
                     by_payment_method: [],
                     top_products: []
                 });
+                setExpenses([]);
                 fetchDashboardData();
             }, 1500);
 
@@ -88,7 +129,7 @@ const Dashboard = () => {
             <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50 dark:border-slate-700 relative overflow-hidden transition-colors duration-300">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 dark:bg-orange-500/5 rounded-full blur-3xl -mr-20 -mt-20 opacity-50 block" />
 
-                <p className="text-gray-500 dark:text-gray-400 font-medium mb-2 relative z-10">Total recaudado</p>
+                <p className="text-gray-500 dark:text-gray-400 font-medium mb-2 relative z-10">Total recaudado (Bruto)</p>
                 <h3 className="text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-8 relative z-10">
                     {formatCurrency(summary.total_amount)}
                 </h3>
@@ -104,6 +145,22 @@ const Dashboard = () => {
                         <p className="text-2xl font-bold text-gray-900 dark:text-white">
                             {formatCurrency(summary.total_amount / (summary.transactions || 1))}
                         </p>
+                    </div>
+
+                    {/* Gastos / Neto Efectivo */}
+                    <div className="w-px h-12 bg-gray-100 dark:bg-slate-700" />
+                    <div>
+                        <p className="text-xs font-bold text-red-500 dark:text-red-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <ArrowDownRight size={14} /> Gastos Caja Chica
+                        </p>
+                        <div className="flex items-end gap-3">
+                            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+                                {formatCurrency(expenses.reduce((acc, curr) => acc + parseFloat(curr.amount), 0))}
+                            </p>
+                            <button onClick={() => setIsExpenseModalOpen(true)} className="mb-1 text-sm bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold px-2 py-0.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                                + Añadir
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -200,6 +257,49 @@ const Dashboard = () => {
                 </button>
             </div>
 
+            {/* Modal para Registrar Gastos */}
+            {isExpenseModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsExpenseModalOpen(false)} />
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-md relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 dark:border-slate-700">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-2xl font-black text-gray-900 dark:text-white">Registrar Gasto</h3>
+                            <button onClick={() => setIsExpenseModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-gray-50 dark:bg-slate-700 p-2 rounded-full transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleAddExpense} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Monto del gasto (₡)</label>
+                                <input
+                                    type="number"
+                                    required
+                                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-2xl px-4 py-3 font-bold text-xl outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 border-transparent dark:text-white transition-all shadow-inner"
+                                    value={newExpense.amount}
+                                    onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+                                    placeholder="Ej. 1500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Descripción (¿En qué se gastó?)</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full bg-gray-50 border border-gray-200 text-gray-900 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500 dark:bg-slate-900 border-transparent dark:text-white transition-all"
+                                    value={newExpense.description}
+                                    onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
+                                    placeholder="Ej. Limones, Hielo, Galletas..."
+                                />
+                            </div>
+
+                            <button type="submit" className="w-full bg-red-600 text-white font-bold py-4 rounded-full mt-4 hover:bg-red-700 hover:shadow-lg transition-all flex justify-center items-center gap-2">
+                                <Plus size={20} /> Registrar Egreso Real
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
