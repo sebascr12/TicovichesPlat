@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useTheme } from '../lib/ThemeContext';
+import { useAuth } from '../lib/AuthContext';
 import { formatCurrency, cn } from '../lib/utils';
 import {
     UtensilsCrossed,
@@ -14,16 +15,9 @@ import {
     CheckCircle2,
     Trash2,
     Moon,
-    Sun
+    Sun,
+    LogOut
 } from 'lucide-react';
-
-// Productos base según requerimiento
-const PRODUCTS = [
-    { id: 1, name: 'Caldosa', price: 1500, image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop' },
-    { id: 2, name: 'Pequeño', price: 2500, image: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=400&h=400&fit=crop' },
-    { id: 3, name: 'Mediano', price: 4000, image: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=400&h=400&fit=crop' },
-    { id: 4, name: 'Grande', price: 7000, image: 'https://images.unsplash.com/photo-1548869206-93b036288d7e?w=400&h=400&fit=crop', popular: true },
-];
 
 const PAYMENT_METHODS = [
     { id: 'Efectivo', icon: Banknote, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-600' },
@@ -34,10 +28,33 @@ const PAYMENT_METHODS = [
 const POS = () => {
     const navigate = useNavigate();
     const { isDarkMode, toggleTheme } = useTheme();
+    const { logout, user } = useAuth();
+
+    const [productsRaw, setProductsRaw] = useState([]);
     const [cart, setCart] = useState({});
     const [customAmount, setCustomAmount] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('Efectivo');
     const [cashGiven, setCashGiven] = useState('');
+
+    useEffect(() => {
+        const loadProducts = async () => {
+            try {
+                const res = await fetch('http://localhost:3000/api/products');
+                const data = await res.json();
+                // Mapeamos temporalmente con la info requerida, e ignoramos los NO activos
+                const mapP = data.filter(p => p.is_active && p.type !== 'custom').map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    price: parseFloat(p.price),
+                    image: p.name.includes('Caldosa') ? 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=400&fit=crop' : 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=400&h=400&fit=crop'
+                }));
+                setProductsRaw(mapP);
+            } catch (err) {
+                toast.error('Error cargando menú');
+            }
+        };
+        loadProducts();
+    }, []);
 
     const updateQuantity = (id, delta) => {
         setCart(prev => {
@@ -53,7 +70,7 @@ const POS = () => {
     };
 
     const cartTotal = Object.entries(cart).reduce((total, [id, qty]) => {
-        const product = PRODUCTS.find(p => p.id === parseInt(id));
+        const product = productsRaw.find(p => p.id === parseInt(id));
         return total + (product ? product.price * qty : 0);
     }, 0);
 
@@ -73,7 +90,7 @@ const POS = () => {
 
         const items = [];
         Object.entries(cart).forEach(([id, qty]) => {
-            const product = PRODUCTS.find(p => p.id === parseInt(id));
+            const product = productsRaw.find(p => p.id === parseInt(id));
             if (product) {
                 items.push({
                     product_id: product.id,
@@ -119,43 +136,8 @@ const POS = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] dark:bg-slate-900 flex flex-col transition-colors duration-300">
-            {/* Navbar Superior del POS */}
-            <header className="h-16 bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between px-6 sticky top-0 z-20 transition-colors duration-300">
-                <div className="flex items-center gap-3">
-                    <UtensilsCrossed className="text-orange-600 dark:text-orange-500" size={24} />
-                    <h1 className="font-black text-xl text-gray-900 dark:text-white tracking-tight">Ticoviches</h1>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    {totalItems > 0 && (
-                        <button
-                            onClick={clearCart}
-                            className="flex items-center gap-2 px-4 h-10 rounded-full bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-400 font-bold text-sm transition-colors"
-                        >
-                            <Trash2 size={16} />
-                            <span className="hidden sm:inline">Vaciar</span>
-                        </button>
-                    )}
-
-                    <button
-                        onClick={toggleTheme}
-                        className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition-colors"
-                        aria-label="Toggle theme"
-                    >
-                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
-
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition-colors"
-                    >
-                        <User size={20} />
-                    </button>
-                </div>
-            </header>
-
-            <main className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto p-4 gap-6">
+        <div className="flex-1 flex flex-col h-full w-full animate-in fade-in duration-300">
+            <main className="flex-1 flex flex-col lg:flex-row w-full mx-auto gap-6">
 
                 {/* Lado Izquierdo: Productos y Opciones */}
                 <div className="flex-1 space-y-8">
@@ -164,7 +146,7 @@ const POS = () => {
                     <section>
                         <h2 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Productos Principales</h2>
                         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
-                            {PRODUCTS.map(product => {
+                            {productsRaw.map(product => {
                                 const qty = cart[product.id] || 0;
                                 return (
                                     <div
@@ -289,7 +271,17 @@ const POS = () => {
                     <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-slate-700 sticky top-24 transition-colors duration-300">
                         {/* Digital Ticket */}
                         <div className="border border-dashed border-gray-200 dark:border-slate-600 rounded-2xl p-4 mb-6 bg-gray-50/50 dark:bg-slate-900/50 min-h-[200px] flex flex-col">
-                            <h3 className="text-center font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-xs mb-4">Tiquete de Venta</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-xs">Tiquete de Venta</h3>
+                                {totalItems > 0 && (
+                                    <button
+                                        onClick={clearCart}
+                                        className="flex items-center gap-1 text-red-500 hover:text-red-700 dark:text-red-400 font-bold text-xs bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 px-2 py-1 rounded-md transition-colors"
+                                    >
+                                        <Trash2 size={14} /> Vaciar
+                                    </button>
+                                )}
+                            </div>
 
                             {grandTotal === 0 ? (
                                 <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm italic">
@@ -298,7 +290,7 @@ const POS = () => {
                             ) : (
                                 <div className="flex-1 space-y-3">
                                     {Object.entries(cart).map(([id, qty]) => {
-                                        const product = PRODUCTS.find(p => p.id === parseInt(id));
+                                        const product = productsRaw.find(p => p.id === parseInt(id));
                                         if (!product) return null;
                                         return (
                                             <div key={id} className="flex justify-between items-center text-sm">

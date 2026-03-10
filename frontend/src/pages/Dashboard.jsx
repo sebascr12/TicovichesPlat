@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { formatCurrency } from '../lib/utils';
 import { TrendingUp, Download, Lock, ChevronRight } from 'lucide-react';
+import { useAuth } from '../lib/AuthContext';
 
 const Dashboard = () => {
+    const { isAdmin } = useAuth();
     const [data, setData] = useState({
         summary: { total_amount: 0, transactions: 0 },
         by_payment_method: [],
@@ -142,13 +144,15 @@ const Dashboard = () => {
 
             {/* Botones de Acción Mágicos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                <button
-                    onClick={handleExportExcel}
-                    className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-slate-600 font-bold py-4 px-6 rounded-2xl hover:border-gray-200 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all shadow-sm"
-                >
-                    <Download size={20} />
-                    Exportar a Excel
-                </button>
+                {isAdmin && (
+                    <button
+                        onClick={handleExportExcel}
+                        className="flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-slate-600 font-bold py-4 px-6 rounded-2xl hover:border-gray-200 dark:hover:border-slate-500 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all shadow-sm"
+                    >
+                        <Download size={20} />
+                        Exportar a Excel
+                    </button>
+                )}
                 <button className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold py-4 px-6 rounded-2xl hover:shadow-[0_8px_20px_rgba(234,88,12,0.3)] transition-all hover:-translate-y-0.5 transform">
                     <Lock size={20} />
                     Cierre de Caja

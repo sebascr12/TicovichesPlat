@@ -1,12 +1,22 @@
 -- Creación de la base de datos (Ejecutar manualmente en PgAdmin/psql si es necesario)
 -- CREATE DATABASE ticoviches_pos;
 
+-- Tabla de Usuarios
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'vendedor', -- 'admin' o 'vendedor'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Tabla de Productos Principales
 CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     type VARCHAR(50) DEFAULT 'principal', -- 'principal' o 'extra'
+    stock INTEGER DEFAULT 0, -- Inventario disponible
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
