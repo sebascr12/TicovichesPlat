@@ -4,14 +4,14 @@ import { LayoutDashboard, ShoppingCart, Package, Settings, UtensilsCrossed } fro
 
 const Sidebar = () => {
     return (
-        <aside className="w-64 bg-white border-r border-gray-100 flex flex-col h-screen fixed left-0 top-0">
-            <div className="p-6 flex items-center gap-3 border-b border-gray-50">
+        <aside className="w-64 bg-white dark:bg-slate-800 border-r border-gray-100 dark:border-slate-700 flex flex-col h-screen fixed left-0 top-0 transition-colors duration-300">
+            <div className="p-6 flex items-center gap-3 border-b border-gray-50 dark:border-slate-700/50">
                 <div className="bg-orange-600 text-white p-2 rounded-xl">
                     <UtensilsCrossed size={24} />
                 </div>
                 <div>
-                    <h1 className="font-bold text-xl text-gray-900 leading-tight">Ticoviches</h1>
-                    <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">Admin Dashboard</p>
+                    <h1 className="font-bold text-xl text-gray-900 dark:text-white leading-tight">Ticoviches</h1>
+                    <p className="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Admin Dashboard</p>
                 </div>
             </div>
 
@@ -22,14 +22,14 @@ const Sidebar = () => {
                 <NavItem to="/settings" icon={<Settings size={20} />} label="Ajustes" />
             </nav>
 
-            <div className="p-6 border-t border-gray-50">
+            <div className="p-6 border-t border-gray-50 dark:border-slate-700/50">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold">
                         AD
                     </div>
                     <div>
-                        <p className="text-sm font-semibold text-gray-900">Administrador</p>
-                        <p className="text-xs text-gray-500">admin@ticoviches.com</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Administrador</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">admin@ticoviches.com</p>
                     </div>
                 </div>
             </div>
@@ -43,8 +43,8 @@ const NavItem = ({ to, icon, label }) => {
             to={to}
             className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium text-sm ${isActive
-                    ? "bg-orange-50 text-orange-600"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700/50 hover:text-gray-900 dark:hover:text-white"
                 }`
             }
         >

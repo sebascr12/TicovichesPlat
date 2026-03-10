@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { useTheme } from '../lib/ThemeContext';
 import { formatCurrency, cn } from '../lib/utils';
 import {
     UtensilsCrossed,
@@ -9,7 +11,10 @@ import {
     Smartphone,
     Plus,
     Minus,
-    CheckCircle2
+    CheckCircle2,
+    Trash2,
+    Moon,
+    Sun
 } from 'lucide-react';
 
 // Productos base según requerimiento
@@ -28,9 +33,11 @@ const PAYMENT_METHODS = [
 
 const POS = () => {
     const navigate = useNavigate();
+    const { isDarkMode, toggleTheme } = useTheme();
     const [cart, setCart] = useState({});
     const [customAmount, setCustomAmount] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('Efectivo');
+    const [cashGiven, setCashGiven] = useState('');
 
     const updateQuantity = (id, delta) => {
         setCart(prev => {
@@ -55,8 +62,14 @@ const POS = () => {
 
     const totalItems = Object.values(cart).reduce((a, b) => a + b, 0) + (customTotal > 0 ? 1 : 0);
 
+    const clearCart = () => {
+        setCart({});
+        setCustomAmount('');
+        setCashGiven('');
+    };
+
     const handleConfirm = async () => {
-        if (grandTotal === 0) return alert('Agrega productos a la venta');
+        if (grandTotal === 0) return toast.error('Agrega productos a la venta');
 
         const items = [];
         Object.entries(cart).forEach(([id, qty]) => {
@@ -82,6 +95,8 @@ const POS = () => {
             });
         }
 
+        const toastId = toast.loading('Registrando venta...');
+
         try {
             const response = await fetch('http://localhost:3000/api/sales', {
                 method: 'POST',
@@ -95,29 +110,49 @@ const POS = () => {
 
             if (!response.ok) throw new Error('Error al guardar la venta');
 
-            alert(`✅ Venta por ${formatCurrency(grandTotal)} en ${paymentMethod} registrada conexito!`);
-            setCart({});
-            setCustomAmount('');
+            toast.success(`Venta de ${formatCurrency(grandTotal)} registrada con éxito!`, { id: toastId });
+            clearCart();
         } catch (error) {
             console.error(error);
-            alert('❌ Hubo un error registrando la venta. Revisa la consola o conexión.');
+            toast.error('Hubo un error registrando la venta.', { id: toastId });
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+        <div className="min-h-screen bg-[#F8F9FA] dark:bg-slate-900 flex flex-col transition-colors duration-300">
             {/* Navbar Superior del POS */}
-            <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-20">
+            <header className="h-16 bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between px-6 sticky top-0 z-20 transition-colors duration-300">
                 <div className="flex items-center gap-3">
-                    <UtensilsCrossed className="text-orange-600" size={24} />
-                    <h1 className="font-black text-xl text-gray-900 tracking-tight">Ticoviches</h1>
+                    <UtensilsCrossed className="text-orange-600 dark:text-orange-500" size={24} />
+                    <h1 className="font-black text-xl text-gray-900 dark:text-white tracking-tight">Ticoviches</h1>
                 </div>
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-colors"
-                >
-                    <User size={20} />
-                </button>
+
+                <div className="flex items-center gap-3">
+                    {totalItems > 0 && (
+                        <button
+                            onClick={clearCart}
+                            className="flex items-center gap-2 px-4 h-10 rounded-full bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-400 font-bold text-sm transition-colors"
+                        >
+                            <Trash2 size={16} />
+                            <span className="hidden sm:inline">Vaciar</span>
+                        </button>
+                    )}
+
+                    <button
+                        onClick={toggleTheme}
+                        className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition-colors"
+                        aria-label="Toggle theme"
+                    >
+                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition-colors"
+                    >
+                        <User size={20} />
+                    </button>
+                </div>
             </header>
 
             <main className="flex-1 flex flex-col lg:flex-row max-w-7xl w-full mx-auto p-4 gap-6">
@@ -127,7 +162,7 @@ const POS = () => {
 
                     {/* PRODUCTOS PRINCIPALES */}
                     <section>
-                        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Productos Principales</h2>
+                        <h2 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Productos Principales</h2>
                         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4">
                             {PRODUCTS.map(product => {
                                 const qty = cart[product.id] || 0;
@@ -137,7 +172,7 @@ const POS = () => {
                                         onClick={() => updateQuantity(product.id, 1)}
                                         className={cn(
                                             "relative group rounded-3xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all border-2",
-                                            qty > 0 ? "border-orange-500" : "border-transparent"
+                                            qty > 0 ? "border-orange-500" : "border-transparent dark:border-slate-800"
                                         )}
                                     >
                                         <div className="aspect-[4/3] relative">
@@ -160,12 +195,12 @@ const POS = () => {
 
                                         {/* Selector de cantidad superpuesto */}
                                         {qty > 0 && (
-                                            <div className="absolute top-3 left-3 bg-white/95 backdrop-blur rounded-full px-2 py-1 flex items-center gap-3 shadow-lg" onClick={e => e.stopPropagation()}>
-                                                <button onClick={() => updateQuantity(product.id, -1)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-colors">
+                                            <div className="absolute top-3 left-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur rounded-full px-2 py-1 flex items-center gap-3 shadow-lg" onClick={e => e.stopPropagation()}>
+                                                <button onClick={() => updateQuantity(product.id, -1)} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors">
                                                     <Minus size={18} />
                                                 </button>
-                                                <span className="font-bold w-4 text-center text-gray-900">{qty}</span>
-                                                <button onClick={() => updateQuantity(product.id, 1)} className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-full transition-colors">
+                                                <span className="font-bold w-4 text-center text-gray-900 dark:text-white">{qty}</span>
+                                                <button onClick={() => updateQuantity(product.id, 1)} className="w-8 h-8 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 rounded-full transition-colors">
                                                     <Plus size={18} />
                                                 </button>
                                             </div>
@@ -177,29 +212,29 @@ const POS = () => {
                     </section>
 
                     {/* EXTRAS Y PERSONALIZADOS */}
-                    <section className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+                    <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors duration-300">
                         <div className="flex items-center gap-3 mb-4 relative z-10">
                             <div className="bg-orange-600 text-white rounded-full p-1 h-6 w-6 flex items-center justify-center">
                                 <Plus size={14} strokeWidth={3} />
                             </div>
-                            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Extras & Personalizados</h2>
+                            <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Extras & Personalizados</h2>
                         </div>
-                        <p className="text-gray-900 font-medium text-sm mb-3">Monto Custom (Picaritas, Galletas, etc.)</p>
+                        <p className="text-gray-900 dark:text-white font-medium text-sm mb-3">Monto Custom (Picaritas, Galletas, etc.)</p>
                         <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-lg">₡</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-bold text-lg">₡</span>
                             <input
                                 type="number"
                                 value={customAmount}
                                 onChange={(e) => setCustomAmount(e.target.value)}
                                 placeholder="0.00"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 pl-10 pr-4 text-xl font-bold text-gray-900 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                                className="w-full bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700 rounded-2xl py-4 pl-10 pr-4 text-xl font-bold text-gray-900 dark:text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600"
                             />
                         </div>
                     </section>
 
                     {/* METODO DE PAGO */}
                     <section>
-                        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Método de Pago</h2>
+                        <h2 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Método de Pago</h2>
                         <div className="grid grid-cols-3 gap-3">
                             {PAYMENT_METHODS.map((method) => {
                                 const Icon = method.icon;
@@ -211,40 +246,103 @@ const POS = () => {
                                         onClick={() => setPaymentMethod(method.id)}
                                         className={cn(
                                             "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all",
-                                            isSelected ? `${method.border} bg-white shadow-sm ring-1 ring-${method.border.split('-')[1]}-100` : "border-transparent bg-white shadow-sm hover:border-gray-200"
+                                            isSelected ? `${method.border} bg-white dark:bg-slate-800 shadow-sm ring-1 ring-${method.border.split('-')[1]}-100 dark:ring-${method.border.split('-')[1]}-900` : "border-transparent bg-white dark:bg-slate-800 dark:border-slate-700 shadow-sm hover:border-gray-200 dark:hover:border-slate-600"
                                         )}
                                     >
-                                        <Icon className={cn(isSelected ? method.color : "text-gray-400")} size={28} />
+                                        <Icon className={cn(isSelected ? method.color : "text-gray-400 dark:text-gray-500")} size={28} />
                                         <span className={cn(
                                             "font-bold text-sm",
-                                            isSelected ? method.color : "text-gray-500"
+                                            isSelected ? method.color : "text-gray-500 dark:text-gray-400"
                                         )}>{method.id}</span>
                                     </button>
                                 )
                             })}
                         </div>
-                    </section>
 
+                        {/* Calculadora de Vuelto Rápida */}
+                        {paymentMethod === 'Efectivo' && grandTotal > 0 && (
+                            <div className="mt-4 p-4 rounded-2xl bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 animate-in fade-in slide-in-from-top-2">
+                                <label className="text-sm font-bold text-orange-800 dark:text-orange-400 mb-2 block">¿Con cuánto pagó el cliente?</label>
+                                <div className="flex gap-3 items-center">
+                                    <span className="text-orange-600 dark:text-orange-500 font-bold text-lg">₡</span>
+                                    <input
+                                        type="number"
+                                        value={cashGiven}
+                                        onChange={(e) => setCashGiven(e.target.value)}
+                                        placeholder="Ingrese monto exacto..."
+                                        className="flex-1 bg-white dark:bg-slate-800 border-none rounded-xl py-2 px-3 text-lg font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                                    />
+                                    {cashGiven && parseFloat(cashGiven) >= grandTotal && (
+                                        <div className="bg-white dark:bg-slate-800 px-4 py-2 rounded-xl border border-green-200 dark:border-green-900/50">
+                                            <span className="text-xs text-green-600 dark:text-green-500 font-bold block">Su vuelto:</span>
+                                            <span className="text-lg text-green-700 dark:text-green-400 font-black">{formatCurrency(parseFloat(cashGiven) - grandTotal)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </section>
                 </div>
 
                 {/* Lado Derecho: Resumen y Cobro (Ticket / Receipt Area) */}
                 <div className="w-full lg:w-96">
-                    <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 sticky top-24">
-                        <div className="mb-8">
-                            <p className="text-gray-500 font-medium mb-1">Total a Pagar</p>
-                            <h2 className="text-5xl font-black text-gray-900 tracking-tight">{formatCurrency(grandTotal)}</h2>
+                    <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-slate-700 sticky top-24 transition-colors duration-300">
+                        {/* Digital Ticket */}
+                        <div className="border border-dashed border-gray-200 dark:border-slate-600 rounded-2xl p-4 mb-6 bg-gray-50/50 dark:bg-slate-900/50 min-h-[200px] flex flex-col">
+                            <h3 className="text-center font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest text-xs mb-4">Tiquete de Venta</h3>
+
+                            {grandTotal === 0 ? (
+                                <div className="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm italic">
+                                    Añade productos para empezar
+                                </div>
+                            ) : (
+                                <div className="flex-1 space-y-3">
+                                    {Object.entries(cart).map(([id, qty]) => {
+                                        const product = PRODUCTS.find(p => p.id === parseInt(id));
+                                        if (!product) return null;
+                                        return (
+                                            <div key={id} className="flex justify-between items-center text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-gray-900 dark:text-white">{qty}x</span>
+                                                    <span className="text-gray-600 dark:text-gray-300">{product.name}</span>
+                                                </div>
+                                                <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(product.price * qty)}</span>
+                                            </div>
+                                        )
+                                    })}
+
+                                    {customTotal > 0 && (
+                                        <div className="flex justify-between items-center text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-gray-900 dark:text-white">1x</span>
+                                                <span className="text-gray-600 dark:text-gray-300">Extras</span>
+                                            </div>
+                                            <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(customTotal)}</span>
+                                        </div>
+                                    )}
+
+                                    <div className="pt-3 mt-3 border-t border-dashed border-gray-200 dark:border-slate-600 flex justify-between items-center">
+                                        <span className="text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider">Pago vía {paymentMethod}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mb-6">
+                            <p className="text-gray-500 dark:text-gray-400 font-medium mb-1">Total a Pagar</p>
+                            <h2 className="text-5xl font-black text-gray-900 dark:text-white tracking-tight">{formatCurrency(grandTotal)}</h2>
                         </div>
 
                         <button
                             onClick={handleConfirm}
                             disabled={grandTotal === 0}
-                            className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-200 disabled:text-gray-400 text-white font-bold text-lg py-5 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 transform hover:-translate-y-0.5"
+                            className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-200 dark:disabled:bg-slate-700 disabled:text-gray-400 dark:disabled:text-slate-500 text-white font-bold text-lg py-5 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 transform hover:-translate-y-0.5"
                         >
                             <CheckCircle2 size={24} />
                             Confirmar Venta
                         </button>
 
-                        <div className="mt-6 flex items-center justify-center gap-2 text-sm font-bold text-gray-400">
+                        <div className="mt-6 flex items-center justify-center gap-2 text-sm font-bold text-gray-400 dark:text-gray-500">
                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                             Sistema Listo
                         </div>
