@@ -65,6 +65,7 @@ const POS = () => {
                     id: p.id,
                     name: p.name,
                     price: parseFloat(p.price),
+                    category: p.category || 'Otros',
                     image: getImageForProduct(p.name)
                 }));
                 setProductsRaw(mapP);
@@ -232,7 +233,7 @@ const POS = () => {
                                         { id: 'Pescado', img: '/images/pequeno.jpeg' },
                                         { id: 'Camarón', img: '/images/mediano.jpeg' },
                                         { id: 'Mixto', img: '/images/grande.jpeg' },
-                                        { id: 'Caldosa', img: '/images/caldosa.jpeg' }
+                                        { id: 'Caldosas', img: '/images/caldosa.jpeg' }
                                     ].map(cat => (
                                         <div
                                             key={cat.id}
@@ -253,29 +254,14 @@ const POS = () => {
                                 <div>
                                     <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Otros Platillos</h3>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                        {productsRaw.filter(p => {
-                                            const lowerName = p.name.toLowerCase();
-                                            return !lowerName.includes('camarón') &&
-                                                !lowerName.includes('camaron') &&
-                                                !lowerName.includes('mixto') &&
-                                                !lowerName.includes('ceviche') &&
-                                                !lowerName.includes('caldosa');
-                                        }).map(renderProductCard)}
+                                        {productsRaw.filter(p => p.category === 'Otros' || !['Pescado', 'Camarón', 'Mixto', 'Caldosas'].includes(p.category)).map(renderProductCard)}
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             // Vista de Productos de la Categoría Seleccionada
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 animate-in fade-in zoom-in-95 duration-200">
-                                {productsRaw.filter(p => {
-                                    const lowerName = p.name.toLowerCase();
-                                    let cat = 'Otros';
-                                    if (lowerName.includes('caldosa')) cat = 'Caldosa';
-                                    else if (lowerName.includes('camarón') || lowerName.includes('camaron')) cat = 'Camarón';
-                                    else if (lowerName.includes('mixto')) cat = 'Mixto';
-                                    else if (lowerName.includes('ceviche')) cat = 'Pescado';
-                                    return cat === selectedCategory;
-                                }).map(renderProductCard)}
+                                {productsRaw.filter(p => p.category === selectedCategory).map(renderProductCard)}
                             </div>
                         )}
                     </section>
