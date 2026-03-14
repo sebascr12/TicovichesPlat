@@ -227,28 +227,27 @@ const POS = () => {
                         {!selectedCategory ? (
                             // Vista Híbrida: Carpetas + Productos Sueltos
                             <div className="space-y-8">
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {['Pescado', 'Camarón', 'Mixto'].map(cat => {
-                                        let bgImage = '/images/pequeno.jpeg';
-                                        if (cat === 'Camarón') bgImage = '/images/mediano.jpeg';
-                                        if (cat === 'Mixto') bgImage = '/images/grande.jpeg';
-
-                                        return (
-                                            <div
-                                                key={cat}
-                                                onClick={() => setSelectedCategory(cat)}
-                                                className="relative group rounded-3xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-all border-2 border-transparent hover:border-orange-500 min-h-[140px]"
-                                            >
-                                                <div className="absolute inset-0">
-                                                    <img src={bgImage} alt={cat} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                                    <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-colors duration-300" />
-                                                </div>
-                                                <div className="relative h-full flex items-center justify-center p-4">
-                                                    <h3 className="font-black text-2xl text-white tracking-wide drop-shadow-lg text-center">{cat}</h3>
-                                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {[
+                                        { id: 'Pescado', img: '/images/pequeno.jpeg' },
+                                        { id: 'Camarón', img: '/images/mediano.jpeg' },
+                                        { id: 'Mixto', img: '/images/grande.jpeg' },
+                                        { id: 'Caldosa', img: '/images/caldosa.jpeg' }
+                                    ].map(cat => (
+                                        <div
+                                            key={cat.id}
+                                            onClick={() => setSelectedCategory(cat.id)}
+                                            className="relative group rounded-3xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-all border-2 border-transparent hover:border-orange-500 min-h-[140px]"
+                                        >
+                                            <div className="absolute inset-0">
+                                                <img src={cat.img} alt={cat.id} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-colors duration-300" />
                                             </div>
-                                        )
-                                    })}
+                                            <div className="relative h-full flex items-center justify-center p-4">
+                                                <h3 className="font-black text-2xl text-white tracking-wide drop-shadow-lg text-center">{cat.id}</h3>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
 
                                 <div>
@@ -259,7 +258,8 @@ const POS = () => {
                                             return !lowerName.includes('camarón') &&
                                                 !lowerName.includes('camaron') &&
                                                 !lowerName.includes('mixto') &&
-                                                !lowerName.includes('ceviche');
+                                                !lowerName.includes('ceviche') &&
+                                                !lowerName.includes('caldosa');
                                         }).map(renderProductCard)}
                                     </div>
                                 </div>
@@ -270,7 +270,8 @@ const POS = () => {
                                 {productsRaw.filter(p => {
                                     const lowerName = p.name.toLowerCase();
                                     let cat = 'Otros';
-                                    if (lowerName.includes('camarón') || lowerName.includes('camaron')) cat = 'Camarón';
+                                    if (lowerName.includes('caldosa')) cat = 'Caldosa';
+                                    else if (lowerName.includes('camarón') || lowerName.includes('camaron')) cat = 'Camarón';
                                     else if (lowerName.includes('mixto')) cat = 'Mixto';
                                     else if (lowerName.includes('ceviche')) cat = 'Pescado';
                                     return cat === selectedCategory;

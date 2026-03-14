@@ -50,18 +50,22 @@ CREATE TABLE IF NOT EXISTS expenses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insertar productos iniciales según indicaciones
+-- Insertar productos iniciales según indicaciones definitivas
 INSERT INTO products (name, price) VALUES
-('Caldosa', 1500.00),
 ('Ceviche de Pescado Pequeño', 2500.00),
-('Ceviche de Pescado Mediano', 4000.00),
-('Ceviche de Pescado Grande', 7000.00),
-('Ceviche de Camarón Pequeño', 2500.00),
-('Ceviche de Camarón Mediano', 4000.00),
-('Ceviche de Camarón Grande', 7000.00),
-('Ceviche Mixto Pequeño', 2500.00),
-('Ceviche Mixto Mediano', 4000.00),
-('Ceviche Mixto Grande', 7000.00);
+('Ceviche de Pescado Mediano', 4500.00),
+('Ceviche de Pescado Grande', 7500.00),
+('Ceviche Mixto Pequeño', 3000.00),
+('Ceviche Mixto Mediano', 5000.00),
+('Ceviche Mixto Grande', 8000.00),
+('Ceviche de Camarón Pequeño', 3500.00),
+('Ceviche de Camarón Mediano', 5500.00),
+('Ceviche de Camarón Grande', 8500.00),
+('Caldosa de Pescado', 1500.00),
+('Caldosa Mixta', 2000.00),
+('Caldosa de Camarón', 2500.00),
+('Sopa', 5000.00),
+('Bebidas', 1000.00);
 
 -- Insertar un registro Dummy para representar el "Monto Custom / Extras"
 INSERT INTO products (name, price, type) VALUES
