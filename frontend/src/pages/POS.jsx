@@ -60,7 +60,7 @@ const POS = () => {
                     return '/images/pequeno.jpeg'; // default fallback
                 };
 
-                // Mapeamos temporalmente con la info requerida, e ignoramos los NO activos
+                // Mapeo estricto por categoría de base de datos
                 const mapP = data.filter(p => p.is_active && p.type !== 'custom').map(p => ({
                     id: p.id,
                     name: p.name,
@@ -68,6 +68,7 @@ const POS = () => {
                     category: p.category || 'Otros',
                     image: getImageForProduct(p.name)
                 }));
+                console.log('Productos cargados v2:', mapP);
                 setProductsRaw(mapP);
             } catch (err) {
                 toast.error('Error cargando menú');
@@ -253,8 +254,8 @@ const POS = () => {
 
                                 <div>
                                     <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">Otros Platillos</h3>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                        {productsRaw.filter(p => p.category === 'Otros' || !['Pescado', 'Camarón', 'Mixto', 'Caldosas'].includes(p.category)).map(renderProductCard)}
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                        {productsRaw.filter(p => !['Pescado', 'Camarón', 'Mixto', 'Caldosas'].includes(p.category)).map(renderProductCard)}
                                     </div>
                                 </div>
                             </div>
