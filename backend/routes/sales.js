@@ -40,7 +40,18 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Obtener ventas (opcional, para historial)
+// Obtener ventas activas (turno actual)
+router.get('/active', async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM sales WHERE status = $1 ORDER BY sale_date DESC', ['active']);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Obtener todas las ventas (historial general)
 router.get('/', async (req, res) => {
     try {
         const result = await db.query('SELECT * FROM sales ORDER BY sale_date DESC LIMIT 100');
@@ -48,6 +59,32 @@ router.get('/', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Actualizar una venta (ej: cambiar método de pago)
+router.patch('/:id', async (req, res) => {
+    const { id } = req.params;
+    const { payment_method } = req.body;
+
+    if (!payment_method) {
+        return res.status(400).json({ error: 'Falta el nuevo método de pago' });
+    }
+
+    try {
+        const result = await db.query(
+            'UPDATE sales SET payment_method = $1 WHERE id = $2 RETURNING *',
+            [payment_method, id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Venta no encontrada' });
+        }
+
+        res.json({ message: 'Venta actualizada con éxito', sale: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al actualizar la venta' });
     }
 });
 

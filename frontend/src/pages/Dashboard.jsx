@@ -11,11 +11,15 @@ const Dashboard = () => {
         by_payment_method: [],
         top_products: []
     });
+    const [recentSales, setRecentSales] = useState([]);
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // Modal State
     const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedSale, setSelectedSale] = useState(null);
+    const [editPaymentMethod, setEditPaymentMethod] = useState('');
     const [newExpense, setNewExpense] = useState({ amount: '', description: '' });
 
     useEffect(() => {
@@ -24,16 +28,19 @@ const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const [reportsRes, expensesRes] = await Promise.all([
+            const [reportsRes, expensesRes, salesRes] = await Promise.all([
                 fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports/daily`),
-                fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/expenses`)
+                fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/expenses`),
+                fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/active`)
             ]);
 
             const reportsResult = await reportsRes.json();
             const expensesResult = await expensesRes.json();
+            const salesResult = await salesRes.json();
 
             setData(reportsResult);
             setExpenses(expensesResult);
+            setRecentSales(salesResult);
         } catch (error) {
             console.error("Error fetching data:", error);
         } finally {
@@ -109,6 +116,35 @@ const Dashboard = () => {
             console.error(error);
             toast.error('Hubo un error en el Cierre.', { id: toastId });
         }
+    };
+
+    const handleUpdatePaymentMethod = async (e) => {
+        e.preventDefault();
+        if (!selectedSale || !editPaymentMethod) return;
+
+        const toastId = toast.loading('Actualizando venta...');
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/sales/${selectedSale.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_method: editPaymentMethod })
+            });
+
+            if (!res.ok) throw new Error("Error actualizando la venta");
+
+            toast.success("Venta actualizada", { id: toastId });
+            setIsEditModalOpen(false);
+            fetchDashboardData();
+        } catch (error) {
+            console.error(error);
+            toast.error("Hubo un error actualizando la venta.", { id: toastId });
+        }
+    };
+
+    const openEditModal = (sale) => {
+        setSelectedSale(sale);
+        setEditPaymentMethod(sale.payment_method);
+        setIsEditModalOpen(true);
     };
 
     if (loading) return <div className="p-8"><p className="dark:text-white">Cargando datos...</p></div>;
@@ -237,6 +273,68 @@ const Dashboard = () => {
                 </div>
             </div>
 
+            {/* Listado de Transacciones Recientes */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white">Transacciones del Turno Activo</h4>
+                </div>
+
+                <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden transition-colors duration-300">
+                    <div className="overflow-x-auto text-sm">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50/50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-700">
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Hora</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Monto</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Método</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                                {recentSales.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="4" className="px-6 py-8 text-center text-gray-400 dark:text-gray-500 italic">
+                                            No hay ventas registradas aún en este turno.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    recentSales.map((sale) => (
+                                        <tr key={sale.id} className="hover:bg-gray-50/50 dark:hover:bg-slate-900/50 transition-colors group">
+                                            <td className="px-6 py-4">
+                                                <span className="font-medium text-gray-600 dark:text-gray-400">
+                                                    {new Date(sale.sale_date).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="font-bold text-gray-900 dark:text-white">
+                                                    {formatCurrency(sale.total_amount)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${sale.payment_method === 'SINPE' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400' :
+                                                        sale.payment_method === 'Efectivo' ? 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400' :
+                                                            'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400'
+                                                    }`}>
+                                                    {sale.payment_method}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button
+                                                    onClick={() => openEditModal(sale)}
+                                                    className="text-orange-600 dark:text-orange-400 font-bold text-xs bg-orange-50 dark:bg-orange-500/10 px-3 py-1.5 rounded-xl transition-all hover:bg-orange-100 dark:hover:bg-orange-500/20 opacity-0 group-hover:opacity-100 focus:opacity-100 lg:opacity-100"
+                                                >
+                                                    Editar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             {/* Botones de Acción Mágicos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 {isAdmin && (
@@ -295,6 +393,54 @@ const Dashboard = () => {
 
                             <button type="submit" className="w-full bg-red-600 text-white font-bold py-4 rounded-full mt-4 hover:bg-red-700 hover:shadow-lg transition-all flex justify-center items-center gap-2">
                                 <Plus size={20} /> Registrar Egreso Real
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal para Editar Venta */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+                    <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 w-full max-w-sm relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 dark:border-slate-700">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">Editar Venta</h3>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">#{selectedSale?.id} - {formatCurrency(selectedSale?.total_amount)}</p>
+                            </div>
+                            <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-gray-50 dark:bg-slate-700 p-2 rounded-full transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdatePaymentMethod} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">Método de Pago</label>
+                                <div className="grid grid-cols-1 gap-3">
+                                    {['Efectivo', 'Tarjeta', 'SINPE'].map((method) => (
+                                        <button
+                                            key={method}
+                                            type="button"
+                                            onClick={() => setEditPaymentMethod(method)}
+                                            className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-all font-bold ${editPaymentMethod === method
+                                                    ? 'border-orange-600 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400'
+                                                    : 'border-gray-100 dark:border-slate-700 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-slate-600'
+                                                }`}
+                                        >
+                                            {method}
+                                            {editPaymentMethod === method && (
+                                                <div className="w-5 h-5 bg-orange-600 rounded-full flex items-center justify-center text-white">
+                                                    <ChevronRight size={14} />
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <button type="submit" className="w-full bg-orange-600 text-white font-bold py-4 rounded-full mt-4 hover:bg-orange-700 hover:shadow-lg transition-all flex justify-center items-center gap-2">
+                                Guardar Cambios
                             </button>
                         </form>
                     </div>
