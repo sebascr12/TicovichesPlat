@@ -351,7 +351,7 @@ const POS = () => {
 
                     <div className={cn(
                         "bg-white dark:bg-slate-800 lg:rounded-[2rem] p-6 lg:shadow-[0_8px_30px_rgb(0,0,0,0.06)] lg:border border-gray-100 dark:border-slate-700 lg:sticky top-24 transition-colors duration-300 relative w-full lg:w-auto",
-                        isCartOpen ? "rounded-t-[2rem] max-h-[85vh] overflow-y-auto pb-safe" : ""
+                        isCartOpen ? "rounded-t-[2rem] max-h-[85dvh] overflow-y-auto pb-24" : ""
                     )}>
                         {/* Mobile handle & close */}
                         {isCartOpen && (
